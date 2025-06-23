@@ -49,6 +49,12 @@ input {
     border-radius: 8px;
 }
 
+label {
+    font-size: 22px;
+    font-weight: bold;
+    padding-right: 15px;
+}
+
 #nameInput {
     margin-right: 7px;
 }
@@ -190,4 +196,19 @@ button:hover {
     font-size: 20px;
     margin-right: 5px;
     align-self: center;
+}
+
+.participants-line {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 5px;
+}
+
+.participants-line .participant {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: black;
 }

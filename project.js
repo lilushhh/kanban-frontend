@@ -67,6 +67,23 @@ async function loadTasks() {
     updateTaskCounts();
 }
 
+function renderParticipants(participants) {
+    const line = document.getElementById("participantsLine");
+    line.innerHTML = "";
+
+    if (!participants || participants.length === 0) {
+        line.innerHTML = "<span>No participants</span>";
+        return;
+    }
+
+    participants.forEach(name => {
+        const span = document.createElement("span");
+        span.classList.add("participant");
+        span.textContent = name;
+        line.appendChild(span);
+    })
+}
+
 async function filterTaskByUser() {
     const selectedUser = document.getElementById("filterOptions").value;
 
@@ -78,9 +95,9 @@ async function filterTaskByUser() {
         zone.innerHTML = "";
     });
 
-    const filteredTasks = selectedUser === "All" ? tasks : tasks.filter(task => task.name === selectedUser);
+    const filteredTasks = selectedUser === "All" ? tasks : tasks.filter(task => task.owners.includes(selectedUser));
     filteredTasks.forEach(task => {
-        renderTask(task.text, task.status, task.name);
+        renderTask(task.text, task.status, task.owners);
     });
 
     updateTaskCounts();
@@ -101,11 +118,12 @@ async function filterByName() {
 
     const tasks = await fetch(url).then(res => res.json());
 
-    let names = [...new Set(tasks.map(task => task.name))];
+    const names = tasks.flatMap(task => task.owners || []);
+    const uniqueNames = [...new Set(names)];
 
     let namesInSelect = Array.from(select.options).map(option => option.value);
 
-    names.forEach(name => {
+    uniqueNames.forEach(name => {
         if (!namesInSelect.includes(name) || namesInSelect == null) {
             const option = document.createElement("option");
             option.value = name;
@@ -122,20 +140,20 @@ function addName() {
     let name = input.value.trim();
     if (!name) {
         undefinedUsers++;
-        name = `user ${undefinedUsers}`;
+        name = [`user ${undefinedUsers}`];
     }
     input.value = "";
-    return name;
+    const namesArray = name.split(",").map(name => name.trim());
+    return namesArray;
 }
 
 async function addTask() {
     const input = document.getElementById("taskInput");
     const taskText = input.value.trim();
-    const nameText = addName();
+    const owners = addName();
     if (!taskText) return;
 
     const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-    getUserColor(nameText);
 
     const url = `http://localhost:8000/projects/${projectName}/tasks`;
     const res = await fetch(url, {
@@ -145,12 +163,12 @@ async function addTask() {
         },
         body: JSON.stringify({
             text: taskText,
-            name: nameText,
+            owners: owners,
             status: "todo"
         })
     });
     if (res.ok) {
-        renderTask(taskText, "todo", nameText);
+        renderTask(taskText, "todo", owners);
         await filterByName();
         input.value = "";
     } else {
@@ -158,16 +176,20 @@ async function addTask() {
     }
 }
 
-function renderTask(text, status, name) {
+function renderTask(text, status, owners) {
     const task = document.createElement("div");
     task.classList.add("task");
     task.setAttribute("draggable", "true");
     task.setAttribute("data-text", text);
-    task.setAttribute("data-name", name);
-    const color = getUserColor(name);
+    task.setAttribute("data-name", owners.join(", "));
+
+    const ownerHTML = owners.map(name => {
+        const color = getUserColor(name);
+        return `<span style="color: ${color}; font-weight: bold;">${name}</span>`;
+    }).join(", ")
 
     task.innerHTML = `
-        <span>${text} - <span style="color: ${color}">${name}</span></span>
+        <span>${text} - ${ownerHTML}</span>
         <i class="fas fa-trash delete-icon" onclick="deleteTask(this)"></i>
     `;
 
@@ -175,7 +197,7 @@ function renderTask(text, status, name) {
         e.dataTransfer.setData("text/plain", text);
         const currentColumn = task.closest(".column").id;
         e.dataTransfer.setData("status", currentColumn);
-        e.dataTransfer.setData("name", name);
+        e.dataTransfer.setData("name", owners.join(", "));
         setTimeout(() => {
             task.style.display = "none";
         }, 0);
@@ -204,7 +226,7 @@ function updateTaskCounts() {
 async function deleteTask(icon) {
     const task = icon.parentElement;
     const taskText = task.getAttribute("data-text");
-    const name = task.getAttribute("data-name");
+    const name = task.getAttribute("data-name").split(",").map(name => name.trim());
     removeNameFromFilter(name);
 
     const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
@@ -214,16 +236,31 @@ async function deleteTask(icon) {
     });
     if (res.ok) {
         task.remove();
+        await removeNameFromFilterIfUnused();
     }
     updateTaskCounts();
 }
 
-function removeNameFromFilter(name) {
+async function removeNameFromFilterIfUnused(name) {
     const select = document.getElementById("filterOptions");
-    for (let i = 0; i < select.options.length; i++) {
-        if (select.options[i].textContent == name) {
-            select.remove(i);
-            break;
+
+    const projectName = await fetch("http://localhost:8000/current-project")
+        .then(res => res.json())
+        .then(data => data.name);
+
+    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+    const tasks = await fetch(url).then(res => res.json());
+
+    const nameUsed = tasks.some(task =>
+        task.owners && task.owners.includes(name)
+    );
+
+    if (!nameUsed) {
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === name) {
+                select.remove(i);
+                break;
+            }
         }
     }
 }

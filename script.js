@@ -20,15 +20,21 @@ async function loadProjects() {
 function addProject() {
     const input = document.getElementById("projectNameInput");
     const projectName = input.value.trim();
+    const participantsInput = document.getElementById("participantsInput");
+    const participantsStr = participantsInput.value.trim();
+    const participants = participantsStr.split(",").map(name => name.trim());
 
-    if (!projectName) return;
+    if (!projectName || !participants) return;
 
     fetch("http://localhost:8000/projects", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name: projectName })
+        body: JSON.stringify({
+            name: projectName,
+            listUsers: participants
+        })
     }).then(res => {
         if (res.ok) {
             loadProjects();
@@ -39,6 +45,7 @@ function addProject() {
         console.error("error: ", err);
     })
     input.value = "";
+    participantsInput.value = "";
 
 }
 window.onload = loadProjects();
