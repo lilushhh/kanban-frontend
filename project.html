@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1 id="boardTitle"></h1>
+        <div class="inputs">
+            <div class="input-container">
+                <input type="text" id="taskInput" placeholder="Enter task title" />
+                <button onclick="addTask()">Add Task</button>
+            </div>
+            <div class="name-input">
+                <input type="text" id="nameInput" placeholder="Enter the name user who created the task" />
+
+                <label for="filterOptions" id="filterLabel">name filter - </label>
+                <select id="filterOptions"></select>
+            </div>
+        </div>
+        <div class="kanban-board">
+            <div class="column" id="todo">
+                <h2 id="todoTitle">TO DO (0)</h2>
+                <div class="tasks"></div>
+            </div>
+            <div class="column" id="inProgress">
+                <h2 id="inProgressTitle">IN PROGRESS (0)</h2>
+                <div class="tasks"></div>
+            </div>
+            <div class="column" id="done">
+                <h2 id="doneTitle">DONE (0)</h2>
+                <div class="tasks"></div>
+            </div>
+        </div>
+        <button onclick="goBack()" id="goBackButton">Back to Projects</button>
+    </div>
+    <script src="project.js"></script>
+</body>
+
+</html>
