@@ -1,13 +1,12 @@
-document.addEventListener("DOMContentLoaded", async() => {
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-    if (projectName) {
-        const title = document.getElementById("boardTitle");
-        title.textContent = `${projectName} - Kanban Board`;
-    } else {
-        document.getElementById("boardTitle").textContent = "Untitled Project - Kanban Board";
-    }
+const urlParams = new URLSearchParams(window.location.search);
+const projectId = parseInt(urlParams.get("id"));
 
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+document.addEventListener("DOMContentLoaded", async() => {
+    const title = document.getElementById("boardTitle");
+    const projectData = await fetch(`http://localhost:8000/projects/${projectId}`).then(res => res.json());
+    title.textContent = `${projectData.name} - Kanban Board`;
+
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
 
     await loadTasks();
 
@@ -23,46 +22,30 @@ document.addEventListener("DOMContentLoaded", async() => {
         zone.addEventListener("drop", async(e) => {
             e.preventDefault();
 
-            const text = e.dataTransfer.getData("text/plain");
-            const oldStatus = e.dataTransfer.getData("status");
+            const taskId = e.dataTransfer.getData("taskId");
             const newStatus = zone.parentElement.id;
-            const nameTask = e.dataTransfer.getData("name");
 
-            const oldColumn = document.querySelector(`#${oldStatus} .tasks`);
-            const taskToMove = [...oldColumn.children].find(el => {
-                el.getAttribute("data-text") === text &&
-                    el.getAttribute("data-name") === nameTask
-            });
-
-            if (taskToMove) {
-                zone.appendChild(taskToMove);
-            }
-
-            await fetch(url, {
+            await fetch(`http://localhost:8000/projects/${projectId}/tasks/${taskId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    text,
-                    name,
-                    status: newStatus
-                })
+                body: JSON.stringify({ status: newStatus })
             });
+
             await loadTasks();
         });
     });
 });
 
 async function loadTasks() {
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
     const tasks = await fetch(url).then(res => res.json());
 
     const allColumns = document.querySelectorAll(".tasks");
     allColumns.forEach(col => col.innerHTML = "");
 
-    tasks.forEach(task => renderTask(task.text, task.status, task.name));
+    tasks.forEach(task => renderTask(task.id, task.text, task.status, task.owners));
     await filterByName();
     updateTaskCounts();
 }
@@ -86,9 +69,7 @@ function renderParticipants(participants) {
 
 async function filterTaskByUser() {
     const selectedUser = document.getElementById("filterOptions").value;
-
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
     const tasks = await fetch(url).then(res => res.json());
 
     document.querySelectorAll(".tasks").forEach(zone => {
@@ -96,9 +77,7 @@ async function filterTaskByUser() {
     });
 
     const filteredTasks = selectedUser === "All" ? tasks : tasks.filter(task => task.owners.includes(selectedUser));
-    filteredTasks.forEach(task => {
-        renderTask(task.text, task.status, task.owners);
-    });
+    filteredTasks.forEach(task => renderTask(task.id, task.text, task.status, task.owners));
 
     updateTaskCounts();
 }
@@ -113,9 +92,7 @@ async function filterByName() {
     allOption.textContent = "All";
     select.appendChild(allOption);
 
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
-
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
     const tasks = await fetch(url).then(res => res.json());
 
     const names = tasks.flatMap(task => task.owners || []);
@@ -153,9 +130,7 @@ async function addTask() {
     const owners = addName();
     if (!taskText) return;
 
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
     const res = await fetch(url, {
         method: "POST",
         headers: {
@@ -176,10 +151,11 @@ async function addTask() {
     }
 }
 
-function renderTask(text, status, owners) {
+function renderTask(id, text, status, owners) {
     const task = document.createElement("div");
     task.classList.add("task");
     task.setAttribute("draggable", "true");
+    task.setAttribute("data-id", id);
     task.setAttribute("data-text", text);
     task.setAttribute("data-name", owners.join(", "));
 
@@ -195,6 +171,7 @@ function renderTask(text, status, owners) {
 
     task.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("text/plain", text);
+        e.dataTransfer.setData("taskId", id);
         const currentColumn = task.closest(".column").id;
         e.dataTransfer.setData("status", currentColumn);
         e.dataTransfer.setData("name", owners.join(", "));
@@ -225,30 +202,23 @@ function updateTaskCounts() {
 
 async function deleteTask(icon) {
     const task = icon.parentElement;
-    const taskText = task.getAttribute("data-text");
-    const name = task.getAttribute("data-name").split(",").map(name => name.trim());
+    const taskId = task.getAttribute("data-id");
+    const name = task.getAttribute("data-name").split(",").map(n => n.trim());
     removeNameFromFilter(name);
 
-    const projectName = await fetch("http://localhost:8000/current-project").then(res => res.json()).then(data => data.name);
-
-    const res = await fetch(`http://localhost:8000/projects/${projectName}/tasks/${taskText}`, {
+    const res = await fetch(`http://localhost:8000/projects/${projectId}/tasks/${taskId}`, {
         method: "DELETE"
     });
     if (res.ok) {
         task.remove();
-        await removeNameFromFilterIfUnused();
+        await removeNameFromFilterIfUnused(name);
     }
     updateTaskCounts();
 }
 
 async function removeNameFromFilterIfUnused(name) {
     const select = document.getElementById("filterOptions");
-
-    const projectName = await fetch("http://localhost:8000/current-project")
-        .then(res => res.json())
-        .then(data => data.name);
-
-    const url = `http://localhost:8000/projects/${projectName}/tasks`;
+    const url = `http://localhost:8000/projects/${projectId}/tasks`;
     const tasks = await fetch(url).then(res => res.json());
 
     const nameUsed = tasks.some(task =>

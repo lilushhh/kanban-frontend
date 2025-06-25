@@ -15,20 +15,16 @@ async function loadProjects() {
 
         nameLink.onclick = (e) => {
             e.preventDefault();
-            fetch(`http://localhost:8000/current-project?name=${encodeURIComponent(project.name)}`, {
-                method: "POST"
-            }).then(() => {
-                window.location.href = "project.html";
-            });
+            window.location.href = `project.html?id=${project.id}`;
         };
 
         const editIcon = document.createElement("i");
         editIcon.className = "fas fa-pen edit-icon";
-        editIcon.onclick = () => renameProject(project.name);
+        editIcon.onclick = () => renameProject(project.id, project.name);
 
         const deleteIcon = document.createElement("i");
         deleteIcon.className = "fas fa-trash delete-icon";
-        deleteIcon.onclick = () => deleteProject(project.name);
+        deleteIcon.onclick = () => deleteProject(project.id, project.name);
 
         wrapper.appendChild(nameLink);
         wrapper.appendChild(editIcon);
@@ -54,7 +50,7 @@ function addProject() {
         },
         body: JSON.stringify({
             name: projectName,
-            listUsers: participants
+            users: participants
         })
     }).then(res => {
         if (res.ok) {
@@ -70,24 +66,22 @@ function addProject() {
 
 }
 
-function deleteProject(name) {
+function deleteProject(id, name) {
     if (confirm(`Are you sure you want to delete project ${name}?`)) {
-        fetch(`http://localhost:8000/projects/${encodeURIComponent(name)}`), {
+        fetch(`http://localhost:8000/projects/${id}`, {
             method: "DELETE"
-        }.then(res => {
+        }).then(res => {
             if (res.ok) loadProjects();
             else console.error("failed to delete project");
         });
     }
 }
 
-function renameProject(oldName) {
+function renameProject(id, oldName) {
     const newName = prompt("Enter the new name for the project ", oldName)
     if (newName && newName.trim() !== "" && newName !== oldName) {
-        fetch(`http://localhost:8000/projects/${encodeURIComponent(oldName)}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ newName: newName.trim() })
+        fetch(`http://localhost:8000/projects/${id}?newName=${encodeURIComponent(newName.trim())}`, {
+            method: "PUT"
         }).then(res => {
             if (res.ok) loadProjects();
             else console.error("faild to rename project");
