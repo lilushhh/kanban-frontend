@@ -26,7 +26,23 @@
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <div id="modalOverlay" style="display: none;" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Update Project</h3>
+            <label for="newProjectName">New Project Name: </label>
+            <input type="text" id="newProjectNameInput" placeholder="if u don't want to change the name - leave it empty">
+
+            <label for="newParticipantsList">New Participants List: </label>
+            <input type="text" id="newParticipantsListInput" placeholder="if u don't want to change the participant list - write the original list">
+
+            <div class="modal-buttons">
+                <button id="saveProjectBtn" onclick="submitUpdate()">Save</button>
+                <button id="cancelProjectBtn" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.ts"></script>
 </body>
 
 </html>

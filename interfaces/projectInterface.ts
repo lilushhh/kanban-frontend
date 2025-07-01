@@ -13,6 +13,6 @@ export interface GetProjectByIdRequest {
 
 export interface UpdateProjectRequest {
     project_id: string;
-    name_project: string;
-    users_list: string[];
+    new_name?: string;
+    new_users: string[];
 }
