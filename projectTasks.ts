@@ -286,11 +286,41 @@ function closeEditModal(): void {
     if (ownersInput) ownersInput.value = "";
 }
 
+async function updateTaskDetails(taskId: string, newText: string, newOwners: string[]): Promise<void> {
+    const taskElement = document.querySelector(`[data-id="${taskId}"]`) as HTMLElement | null;
+    if (!taskElement || !projectId) return;
+
+    const status = taskElement.getAttribute("data-status") || "todo";
+
+    const dto: UpdateTaskRequest = {
+        project_id: projectId,
+        task_id: taskId,
+        task_title: newText,
+        owners_list: newOwners,
+        status_task: status as "todo" | "inProgress" | "done"
+    };
+
+    const res = await fetch(`http://localhost:8000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dto)
+    });
+
+    if (res.ok) {
+        taskElement.remove();
+        renderTask(taskId, newText, status, newOwners);
+        closeEditModal();
+    } else {
+        alert("Failed to update task");
+    }
+}
+
+
 function deleteTask(id: string): any {
     throw new Error("Function not implemented.");
 }
 
-function updateTaskDetails(id: string, newText: string, newOwners: string[]) {
-    throw new Error("Function not implemented.");
-}
+
 
