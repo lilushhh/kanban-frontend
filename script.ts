@@ -2,10 +2,14 @@ import { CreateProjectRequest, DeleteProjectRequest, GetProjectByIdRequest, Upda
 
 async function loadProjects() {
     const response = await fetch("http://localhost:8000/projects");
-    const projects = await response.json();
-    const projectList = document.getElementById("projectsList") as HTMLDivElement | null;
-    if (!projectList) return;
+    if(!response.ok){
+        console.error("Faild to fetch projects");
+        return;
+    }
 
+    const projects = await response.json();
+    const projectList = document.getElementById("projectList") as HTMLDivElement | null;
+    if(!projectList) return;
     projectList.innerHTML = "";
 
     projects.forEach((project: any) => {
@@ -13,14 +17,12 @@ async function loadProjects() {
         wrapper.classList.add("project-item");
 
         const nameLink = document.createElement("a");
-        nameLink.textContent = project.name;
         nameLink.href = "#";
-        nameLink.classList.add("prooject-name-link");
-
+        nameLink.classList.add("project-name-link");
         nameLink.onclick = (e) => {
             e.preventDefault();
             window.location.href = `project.html?id=${project.id}`;
-        };
+        }
 
         const editIcon = document.createElement("i");
         editIcon.className = "fas fa-pen edit-icon";
@@ -33,7 +35,6 @@ async function loadProjects() {
         wrapper.appendChild(nameLink);
         wrapper.appendChild(editIcon);
         wrapper.appendChild(deleteIcon);
-
         projectList.appendChild(wrapper);
     });
 }
