@@ -44,6 +44,8 @@ async function renderParticipants() : Promise<void>{
     })
 }
 
+
+
 function renderTask(id: any, text: any, status: any, owners: any) {
     throw new Error("Function not implemented.");
 }
@@ -51,3 +53,18 @@ function updateTaskCounts() {
     throw new Error("Function not implemented.");
 }
 
+function getUserColor(name: string, hashOffset = 0): string {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    hash += hashOffset;
+    let color = "#";
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xff;
+        color += value.toString(16).padStart(2, "0");
+    }
+
+    return color;
+}
