@@ -1,3 +1,5 @@
+import {CreateTaskRequest, DeleteTaskRequest, UpdateTaskRequest, GetTaskByIdRequest} from "./interfaces/taskInterface"
+
 let projectId: string | null = null;
 const urlParams = new URLSearchParams(window.location.search);
 const idParam = urlParams.get("id");
@@ -6,6 +8,9 @@ if (!idParam) {
 }
 
 projectId = idParam;
+
+let projectParticipants: string[] = [];
+let currentTaskOwners: string[] = [];
 
 async function loadTasks() :Promise<void>{
     const res = await fetch("http://localhost:8000/tasks");
@@ -45,9 +50,6 @@ async function renderParticipants() : Promise<void>{
     })
 }
 
-let projectParticipants: string[] = [];
-let currentTaskOwners: string[] = [];
-
 function addName(): string[] {
     const nameInput = document.getElementById("nameInput") as HTMLInputElement | null;
     const participantsLine = document.getElementById("participantsLine");
@@ -81,6 +83,49 @@ function addName(): string[] {
     return addedUsers;
 }
 
+async function addTask() : Promise<void>{
+    const input = document.getElementById("taskInput") as HTMLInputElement | null;
+    if(!input) return;
+
+    const taskText = input.value.trim();
+    if(!taskText){
+        alert("Please enter a task title!");
+        return;
+    }
+    const owners = addName();
+    if(owners.length === 0 ){
+        alert("Please add at least one valid participant.");
+        return;    
+    }
+    if(!projectId){
+        alert("No project selectes!");
+        return;
+    }
+    const task: CreateTaskRequest = {
+        project_id: projectId,
+        task_title: taskText,
+        owners_list: owners,
+        status_task: "todo"
+    };
+    
+    const res = await fetch("http://localhost:8000/tasks", {
+        method:"POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify(task)
+    });
+    if(res.ok) {
+        const createdTask = await res.json();
+        renderTask(createdTask.id, createdTask.text, createdTask.status, createdTask.owners);
+        input.value = "";
+        currentTaskOwners = [];
+        await filterByName();
+    } else {
+        alert("Failed to add task!");
+    }
+}
+
 function renderTask(id: any, text: any, status: any, owners: any) {
     throw new Error("Function not implemented.");
 }
@@ -102,4 +147,8 @@ function getUserColor(name: string, hashOffset = 0): string {
     }
 
     return color;
+}
+
+function filterByName() {
+    throw new Error("Function not implemented.");
 }
