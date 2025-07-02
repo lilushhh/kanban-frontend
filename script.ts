@@ -39,7 +39,7 @@ async function loadProjects() {
     });
 }
 
-function addProject() {
+function addProject(): void {
     const input = document.getElementById("projectNameInput") as HTMLInputElement | null;
     const participantsInput = document.getElementById("participantsInput") as HTMLInputElement | null;
 
@@ -47,8 +47,12 @@ function addProject() {
 
     const projectName = input.value.trim();
     const participantsStr = participantsInput.value.trim();
-    const participants = participantsStr.split(",").map(name => name.trim());
+    const participants = participantsStr
+        .split(",")
+        .map(name => name.trim())
+        .filter(name => name !== ""); 
 
+  
     if (!projectName || participants.length === 0) return;
 
     const newProject: CreateProjectRequest = {
@@ -64,17 +68,17 @@ function addProject() {
         body: JSON.stringify(newProject)
     }).then(res => {
         if (res.ok) {
-            loadProjects();
+            loadProjects(); 
+            input.value = "";
+            participantsInput.value = "";
         } else {
-            console.error("cant add project");
+            console.error("Failed to add project");
         }
     }).catch(err => {
-        console.error("error: ", err);
+        console.error("Network or server error:", err);
     });
-
-    input.value = "";
-    participantsInput.value = "";
 }
+
 
 function deleteProject(id: string, name: string) {
     if (confirm(`Are you sure you want to delete project ${name}?`)) {
