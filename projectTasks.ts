@@ -40,11 +40,46 @@ async function renderParticipants() : Promise<void>{
         const span = document.createElement("span");
         span.textContent = user;
         span.className = "participant-tag";
+        span.style.color = getUserColor(user);
         participantsLine.appendChild(span);
     })
 }
 
+let projectParticipants: string[] = [];
+let currentTaskOwners: string[] = [];
 
+function addName(): string[] {
+    const nameInput = document.getElementById("nameInput") as HTMLInputElement | null;
+    const participantsLine = document.getElementById("participantsLine");
+
+    if(!nameInput || !participantsLine) return [];
+
+    const rawInput = nameInput.value.trim();
+    if(!rawInput) return [];
+
+    const names = rawInput.split(",").map(n => n.trim()).filter(n => n !== "");
+
+    const addedUsers: string[] = [];
+
+    names.forEach(inputName => {
+        const match = projectParticipants.find(p => p.toLowerCase()===inputName.toLowerCase());
+
+        if(!match){
+            alert(`${inputName} is not part of this project!`);
+            return;
+        }
+        if( currentTaskOwners.includes(match)) return;
+        currentTaskOwners.push(match);
+        addedUsers.push(match);
+        
+        const tag = document.createElement("span");
+        tag.textContent = match;
+        tag.className = "participant-tag";
+        tag.style.color = getUserColor(match);
+        participantsLine.appendChild(tag);
+    });
+    return addedUsers;
+}
 
 function renderTask(id: any, text: any, status: any, owners: any) {
     throw new Error("Function not implemented.");
