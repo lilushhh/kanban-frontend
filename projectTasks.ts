@@ -126,8 +126,51 @@ async function addTask() : Promise<void>{
     }
 }
 
-function renderTask(id: any, text: any, status: any, owners: any) {
-    throw new Error("Function not implemented.");
+function renderTask(id: string, text: string, status: string, owners: string[]) : void {
+    const task = document.createElement("div");
+    task.classList.add("task");
+    task.setAttribute("draggable", "true");
+
+    task.setAttribute("data-id", id);
+    task.setAttribute("data-text", text);
+    task.setAttribute("data-status", status);
+    task.setAttribute("data-owners", owners.join(","));
+
+    const ownerHTML = owners.map(name => {
+        const color = getUserColor(name);
+        return `<span style="color: ${color}; font-weight: bold;">${name}</span>`;
+    }).join(", ");
+
+    const content = document.createElement("span");
+    content.innerHTML = `${text} - ${ownerHTML}`;
+    task.appendChild(content);
+
+    const editIcon = document.createElement("i");
+    editIcon.className = "fas fa-pen edit-icon";
+    editIcon.onclick = () => openEditModal(id, text, owners, status);
+    task.appendChild(editIcon);
+
+    const deleteIcon = document.createElement("i");
+    deleteIcon.className = "fas fa-trash delete-icon";
+    deleteIcon.onclick = () => deleteTask(id);
+    task.appendChild(deleteIcon);
+
+    task.addEventListener("dragstart", (e: DragEvent) => {
+        if (!e.dataTransfer) return;
+        e.dataTransfer.setData("taskId", id);
+        e.dataTransfer.setData("status", status);
+    });
+
+    task.addEventListener("dragend", () => {
+        task.style.display = "flex";
+    });
+
+    const column = document.querySelector(`#${status} .tasks`) as HTMLElement | null;
+    if (column) {
+        column.appendChild(task);
+    }
+
+    updateTaskCounts();
 }
 function updateTaskCounts() {
     throw new Error("Function not implemented.");
@@ -152,3 +195,11 @@ function getUserColor(name: string, hashOffset = 0): string {
 function filterByName() {
     throw new Error("Function not implemented.");
 }
+function openEditModal(id: string, text: string, owners: string[], status: string): any {
+    throw new Error("Function not implemented.");
+}
+
+function deleteTask(id: string): any {
+    throw new Error("Function not implemented.");
+}
+
