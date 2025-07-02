@@ -227,7 +227,17 @@ function setupDragAndDrop() : void {
 }
 
 function updateTaskCounts() {
-    throw new Error("Function not implemented.");
+    const todoCount = document.querySelectorAll("#todo .task").length;
+    const inProgressCount = document.querySelectorAll("#inProgress .task").length;
+    const doneCount = document.querySelectorAll("#done .task").length;
+
+    const todoTitle = document.getElementById("todoTitle");
+    const inProgressTitle = document.getElementById("inProgressTitle");
+    const doneTitle = document.getElementById("doneTitle");
+
+    if(todoTitle) todoTitle.textContent = `TO DO (${todoCount})`;
+    if(inProgressTitle) inProgressTitle.textContent = `IN PROGRESS (${inProgressCount})`;
+    if(doneTitle) doneTitle.textContent = `DONE (${doneCount})`;
 }
 
 function getUserColor(name: string, hashOffset = 0): string {
@@ -246,9 +256,6 @@ function getUserColor(name: string, hashOffset = 0): string {
     return color;
 }
 
-function filterByName() {
-    throw new Error("Function not implemented.");
-}
 function openEditModal(id: string, text: string, owners: string[], status: string): any {
     editingTaskId = id;
 
@@ -317,6 +324,9 @@ async function updateTaskDetails(taskId: string, newText: string, newOwners: str
     }
 }
 
+function filterByName() {
+    throw new Error("Function not implemented.");
+}
 
 function deleteTask(id: string): any {
     throw new Error("Function not implemented.");
