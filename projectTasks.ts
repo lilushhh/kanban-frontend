@@ -1,4 +1,4 @@
-import {CreateTaskRequest, DeleteTaskRequest, UpdateTaskRequest, GetTaskByIdRequest} from "./interfaces/taskInterface"
+import {CreateTaskRequest, UpdateTaskRequest, GetTaskByIdRequest} from "./interfaces/taskInterface"
 
 let projectId: string | null = null;
 const urlParams = new URLSearchParams(window.location.search);
@@ -328,8 +328,21 @@ function filterByName() {
     throw new Error("Function not implemented.");
 }
 
-function deleteTask(id: string): any {
-    throw new Error("Function not implemented.");
+async function deleteTask(id: string): Promise<void> {
+    const confirmed = confirm("Are you sure you want to delete this task?");
+    if (!confirmed) return;
+
+    const res = await fetch(`http://localhost:8000/tasks/${id}`, {
+        method: "DELETE"
+    });
+
+    if (res.ok) {
+        const taskElement = document.querySelector(`[data-id="${id}"]`);
+        if (taskElement) taskElement.remove();
+        updateTaskCounts();
+    } else {
+        alert("Failed to delete task.");
+    }
 }
 
 
