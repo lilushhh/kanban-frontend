@@ -172,6 +172,59 @@ function renderTask(id: string, text: string, status: string, owners: string[]) 
 
     updateTaskCounts();
 }
+
+async function updateTaskStatus(taskId: string, newStatus: string): Promise<void> {
+    const taskElement = document.querySelector(`[data-id="${taskId}"]`);
+    if(!taskElement) return;
+
+    const text = taskElement.getAttribute("data-text") || "";
+    const ownersStr = taskElement.getAttribute("data-owners") || "";
+    const owners = ownersStr.split(",").map(n => n.trim());
+
+    const dto : UpdateTaskRequest = {
+        project_id: projectId!,
+        task_id: taskId,
+        task_title: text,
+        owners_list: owners,
+        status_task: newStatus as "todo" | "inProgress" | "done"
+    };
+
+    const res = await fetch(`http://localhost:8000/tasks/${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto)
+    });
+
+    if(res.ok){
+        taskElement.remove();
+        renderTask(taskId, text, newStatus, owners);
+    } else {
+        alert("Failed to update status");
+    }
+}
+
+function setupDragAndDrop() : void {
+    const columns = document.querySelectorAll(".tasks");
+
+    columns.forEach(column => {
+        column.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+
+        column.addEventListener("drop", async (event) => {
+            const e = event as DragEvent;
+            e.preventDefault();
+
+            const taskId = e.dataTransfer?.getData("taskId");
+            const newStatus = column.closest(".column")?.id;
+
+            if(!taskId || !newStatus) return;
+
+            await updateTaskStatus(taskId, newStatus);
+        });
+    });
+}
+
 function updateTaskCounts() {
     throw new Error("Function not implemented.");
 }
