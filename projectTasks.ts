@@ -11,6 +11,7 @@ projectId = idParam;
 
 let projectParticipants: string[] = [];
 let currentTaskOwners: string[] = [];
+let editingTaskId: string | null = null;
 
 async function loadTasks() :Promise<void>{
     const res = await fetch("http://localhost:8000/tasks");
@@ -249,10 +250,47 @@ function filterByName() {
     throw new Error("Function not implemented.");
 }
 function openEditModal(id: string, text: string, owners: string[], status: string): any {
-    throw new Error("Function not implemented.");
+    editingTaskId = id;
+
+    const modal = document.getElementById("editModalOverlay") as HTMLDivElement | null;
+    const textInput = document.getElementById("editTaskText") as HTMLInputElement | null;
+    const ownersInput = document.getElementById("editTaskOwners") as HTMLInputElement | null;
+
+    if(!modal || !textInput || !ownersInput) return;
+
+    textInput.value = text;
+    ownersInput.value = owners.join(", ");
+    modal.style.display = "flex";
+
+    const saveBtn = document.getElementById("saveEditBtn");
+    if(saveBtn){
+        saveBtn.onclick = () =>{
+            const newText = textInput.value.trim();
+            const newOwners = ownersInput.value.split(",").map(n=>n.trim()).filter(n=>n!=="");
+
+            updateTaskDetails(id, newText, newOwners);
+        }
+    }
+}
+
+function closeEditModal(): void {
+    const modal = document.getElementById("editModalOverlay") as HTMLDivElement | null;
+    if (modal) modal.style.display = "none";
+
+    editingTaskId = null;
+
+    const textInput = document.getElementById("editTaskText") as HTMLInputElement | null;
+    const ownersInput = document.getElementById("editTaskOwners") as HTMLInputElement | null;
+
+    if (textInput) textInput.value = "";
+    if (ownersInput) ownersInput.value = "";
 }
 
 function deleteTask(id: string): any {
+    throw new Error("Function not implemented.");
+}
+
+function updateTaskDetails(id: string, newText: string, newOwners: string[]) {
     throw new Error("Function not implemented.");
 }
 
