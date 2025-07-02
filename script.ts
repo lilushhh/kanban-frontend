@@ -97,10 +97,12 @@ function deleteProject(id: string, name: string) {
 }
 
 let currentProjectId: string | null = null;
+let originalProjectName: string = "";
 let originalUsers: string[] = [];
 
-function openModal(id: string, oldName: string, oldParticipants: string[]) {
+function openModal(id: string, oldName: string, oldParticipants:string[]): void {
     currentProjectId = id;
+    originalProjectName = oldName;
     originalUsers = [...oldParticipants];
 
     const nameInput = document.getElementById("newProjectNameInput") as HTMLInputElement | null;
@@ -117,47 +119,47 @@ function closeModal(): void {
     if (modal) modal.style.display = "none";
 }
 
-function submitUpdate(): void {
+function submitUpdate(): void{
     const nameInput = document.getElementById("newProjectNameInput") as HTMLInputElement | null;
     const usersInput = document.getElementById("newParticipantsListInput") as HTMLInputElement | null;
 
-    if (!nameInput || !usersInput || !currentProjectId) {
+    if(!nameInput || !usersInput || !currentProjectId) {
         alert("Missing data or no project selected.");
         return;
     }
 
     const newName = nameInput.value.trim();
     const usersStr = usersInput.value.trim();
-    const newUsers: string[] = usersStr
-        ? usersStr.split(",").map(u => u.trim()).filter(u => u.length > 0)
-        : [];
+    const users: string[] = usersStr.split(",").map(u => u.trim()).filter(u => u.length > 0);
 
-    const usersChanged = JSON.stringify([...newUsers].sort()) !== JSON.stringify([...originalUsers].sort());
-
-    if (!newName && !usersChanged) {
-        alert("No changes detected.");
+    if(users.length === 0){
+        alert("Participants list cannot be empty.");
         return;
     }
 
-    const dto: UpdateProjectRequest = {
+    const nameToSend = newName !== "" ? newName : originalProjectName;
+
+    const updatedProject : UpdateProjectRequest = {
         project_id: currentProjectId,
-        ...(newName && { new_name: newName }),
-        new_users: newUsers
+        name_project: nameToSend,
+        users_list: users
     };
 
-    fetch("http://localhost:8000/projects", {
+    fetch(`http://localhost:8000/projects/${currentProjectId}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(dto)
+        body: JSON.stringify(updatedProject)
     }).then(res => {
-        if (res.ok) {
+        if(res.ok){
             loadProjects();
             closeModal();
         } else {
             alert("Failed to update project");
         }
+    }).catch(err => {
+        console.error("Erorr updating project: ", err);
     });
 }
 
