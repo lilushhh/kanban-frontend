@@ -81,20 +81,17 @@ function addProject(): void {
 
 
 function deleteProject(id: string, name: string) {
-    if (confirm(`Are you sure you want to delete project ${name}?`)) {
-        const projectToDelete: DeleteProjectRequest = {
-            project_id: id
-        };
-
+    if (confirm(`Are you sure you want to delete project "${name}"?`)) {
         fetch(`http://localhost:8000/projects/${id}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(projectToDelete)
-        }).then(res => {
-            if (res.ok) loadProjects();
-            else console.error("failed to delete project");
+            method: "DELETE"
+        }).then(res =>{
+            if(res.ok){
+                loadProjects();
+            } else {
+                console.error(`Failed to delete project "${name}"`);
+            }
+        }).catch(err => {
+            console.error("Error deleting project:", err)
         });
     }
 }
