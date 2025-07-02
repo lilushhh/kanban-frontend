@@ -1,14 +1,14 @@
-import { CreateProjectRequest, DeleteProjectRequest, GetProjectByIdRequest, UpdateProjectRequest } from "./interfaces/projectInterface";
+import { CreateProjectRequest, GetProjectByIdRequest, UpdateProjectRequest } from "./interfaces/projectInterface";
 
 async function loadProjects() {
-    const response = await fetch("http://localhost:8000/projects");
+    const response = await fetch("http://localhost:8000/projects/");
     if(!response.ok){
         console.error("Faild to fetch projects");
         return;
     }
 
     const projects = await response.json();
-    const projectList = document.getElementById("projectList") as HTMLDivElement | null;
+    const projectList = document.getElementById("projectsList") as HTMLDivElement | null;
     if(!projectList) return;
     projectList.innerHTML = "";
 
@@ -19,6 +19,7 @@ async function loadProjects() {
         const nameLink = document.createElement("a");
         nameLink.href = "#";
         nameLink.classList.add("project-name-link");
+        nameLink.textContent = project.name;
         nameLink.onclick = (e) => {
             e.preventDefault();
             window.location.href = `project.html?id=${project.id}`;
@@ -60,7 +61,7 @@ function addProject(): void {
         users_list: participants
     };
 
-    fetch("http://localhost:8000/projects", {
+    fetch("http://localhost:8000/projects/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -166,3 +167,7 @@ function submitUpdate(): void{
 window.onload = () => {
     loadProjects();
 };
+
+(window as any).addProject = addProject;
+(window as any).submitUpdate = submitUpdate;
+(window as any).closeModal = closeModal;

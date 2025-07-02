@@ -41,7 +41,24 @@
         </div>
         <button onclick="goBack()" id="goBackButton">Back to Projects</button>
     </div>
-    <script src="project.js"></script>
+    <div id="editModalOverlay" style="display: none;" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Edit Task</h3>
+
+            <label for="editTaskText">Task Title:</label>
+            <input type="text" id="editTaskText" placeholder="Update task text" />
+
+            <label for="editTaskOwners">Participants:</label>
+            <input type="text" id="editTaskOwners" placeholder="Enter names separated by comma" />
+
+            <div class="modal-buttons">
+                <button id="saveEditBtn">Save</button>
+                <button onclick="closeEditModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./dist/projectTasks.js"></script>
 </body>
 
 </html>

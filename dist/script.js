@@ -1,0 +1,153 @@
+async function loadProjects() {
+    const response = await fetch("http://localhost:8000/projects/");
+    if (!response.ok) {
+        console.error("Faild to fetch projects");
+        return;
+    }
+    const projects = await response.json();
+    const projectList = document.getElementById("projectsList");
+    if (!projectList)
+        return;
+    projectList.innerHTML = "";
+    projects.forEach((project) => {
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("project-item");
+        const nameLink = document.createElement("a");
+        nameLink.href = "#";
+        nameLink.classList.add("project-name-link");
+        nameLink.textContent = project.name;
+        nameLink.onclick = (e) => {
+            e.preventDefault();
+            window.location.href = `project.html?id=${project.id}`;
+        };
+        const editIcon = document.createElement("i");
+        editIcon.className = "fas fa-pen edit-icon";
+        editIcon.onclick = () => openModal(project.id, project.name, project.users);
+        const deleteIcon = document.createElement("i");
+        deleteIcon.className = "fas fa-trash delete-icon";
+        deleteIcon.onclick = () => deleteProject(project.id, project.name);
+        wrapper.appendChild(nameLink);
+        wrapper.appendChild(editIcon);
+        wrapper.appendChild(deleteIcon);
+        projectList.appendChild(wrapper);
+    });
+}
+function addProject() {
+    const input = document.getElementById("projectNameInput");
+    const participantsInput = document.getElementById("participantsInput");
+    if (!input || !participantsInput)
+        return;
+    const projectName = input.value.trim();
+    const participantsStr = participantsInput.value.trim();
+    const participants = participantsStr
+        .split(",")
+        .map(name => name.trim())
+        .filter(name => name !== "");
+    if (!projectName || participants.length === 0)
+        return;
+    const newProject = {
+        name_project: projectName,
+        users_list: participants
+    };
+    fetch("http://localhost:8000/projects/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newProject)
+    }).then(res => {
+        if (res.ok) {
+            loadProjects();
+            input.value = "";
+            participantsInput.value = "";
+        }
+        else {
+            console.error("Failed to add project");
+        }
+    }).catch(err => {
+        console.error("Network or server error:", err);
+    });
+}
+function deleteProject(id, name) {
+    if (confirm(`Are you sure you want to delete project "${name}"?`)) {
+        fetch(`http://localhost:8000/projects/${id}`, {
+            method: "DELETE"
+        }).then(res => {
+            if (res.ok) {
+                loadProjects();
+            }
+            else {
+                console.error(`Failed to delete project "${name}"`);
+            }
+        }).catch(err => {
+            console.error("Error deleting project:", err);
+        });
+    }
+}
+let currentProjectId = null;
+let originalProjectName = "";
+let originalUsers = [];
+function openModal(id, oldName, oldParticipants) {
+    currentProjectId = id;
+    originalProjectName = oldName;
+    originalUsers = [...oldParticipants];
+    const nameInput = document.getElementById("newProjectNameInput");
+    const participantsInput = document.getElementById("newParticipantsListInput");
+    const modal = document.getElementById("modalOverlay");
+    if (nameInput)
+        nameInput.value = "";
+    if (participantsInput)
+        participantsInput.value = oldParticipants.join(", ");
+    if (modal)
+        modal.style.display = "flex";
+}
+function closeModal() {
+    const modal = document.getElementById("modalOverlay");
+    if (modal)
+        modal.style.display = "none";
+}
+function submitUpdate() {
+    const nameInput = document.getElementById("newProjectNameInput");
+    const usersInput = document.getElementById("newParticipantsListInput");
+    if (!nameInput || !usersInput || !currentProjectId) {
+        alert("Missing data or no project selected.");
+        return;
+    }
+    const newName = nameInput.value.trim();
+    const usersStr = usersInput.value.trim();
+    const users = usersStr.split(",").map(u => u.trim()).filter(u => u.length > 0);
+    if (users.length === 0) {
+        alert("Participants list cannot be empty.");
+        return;
+    }
+    const nameToSend = newName !== "" ? newName : originalProjectName;
+    const updatedProject = {
+        project_id: currentProjectId,
+        name_project: nameToSend,
+        users_list: users
+    };
+    fetch(`http://localhost:8000/projects/${currentProjectId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedProject)
+    }).then(res => {
+        if (res.ok) {
+            loadProjects();
+            closeModal();
+        }
+        else {
+            alert("Failed to update project");
+        }
+    }).catch(err => {
+        console.error("Erorr updating project: ", err);
+    });
+}
+window.onload = () => {
+    loadProjects();
+};
+window.addProject = addProject;
+window.submitUpdate = submitUpdate;
+window.closeModal = closeModal;
+export {};

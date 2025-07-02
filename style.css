@@ -59,6 +59,21 @@ label {
     margin-right: 7px;
 }
 
+.name-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.name-input input {
+    width: 400px;
+    padding: 10px;
+    font-size: 18px;
+    border-radius: 8px;
+}
+
 #buttonName {
     width: 150px;
     height: 45px;
@@ -236,13 +251,14 @@ button:hover {
     font-weight: bold;
     color: black;
 }
+
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -253,7 +269,7 @@ button:hover {
     padding: 20px;
     border-radius: 10px;
     width: 300px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .modal-content h3 {
