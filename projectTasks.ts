@@ -324,9 +324,71 @@ async function updateTaskDetails(taskId: string, newText: string, newOwners: str
     }
 }
 
-function filterByName() {
-    throw new Error("Function not implemented.");
+async function filterByName(): Promise<void> {
+    const select = document.getElementById("filterOptions") as HTMLSelectElement | null;
+    if (!select || !projectId) return;
+
+    select.innerHTML = "";
+
+    const allOption = document.createElement("option");
+    allOption.value = "All";
+    allOption.textContent = "All";
+    select.appendChild(allOption);
+
+    const response = await fetch("http://localhost:8000/tasks");
+    if (!response.ok) {
+        console.error("Failed to fetch tasks");
+        return;
+    }
+
+    const allTasks = await response.json();
+    const tasks = allTasks.filter((t: any) => t.project_id === projectId);
+
+    const names: string[] = tasks.flatMap((t: any) => t.owners ?? []);
+    const uniqueNames: string[] = [...new Set(names)].sort();
+
+    uniqueNames.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
 }
+
+async function filterTaskByUser(): Promise<void> {
+    const select = document.getElementById("filterOptions") as HTMLSelectElement | null;
+    if (!select || !projectId) return;
+
+    const selectedUser = select.value;
+
+    const response = await fetch("http://localhost:8000/tasks");
+    if (!response.ok) {
+        console.error("Failed to fetch tasks");
+        return;
+    }
+
+    const allTasks = await response.json();
+    const tasks = allTasks.filter((t: any) => t.project_id === projectId);
+
+    const filteredTasks = selectedUser === "All"
+        ? tasks
+        : tasks.filter((t: any) =>
+            (t.owners || []).some((owner: string) => owner.toLowerCase() === selectedUser.toLowerCase())
+        );
+
+  // ניקוי כל הטורים
+    document.querySelectorAll(".tasks").forEach(column => {
+        column.innerHTML = "";
+    });
+
+  // רינדור מחודש של משימות
+    filteredTasks.forEach((task: any) => {
+        renderTask(task.id, task.text, task.status, task.owners);
+    });
+
+    updateTaskCounts();
+}
+
 
 async function deleteTask(id: string): Promise<void> {
     const confirmed = confirm("Are you sure you want to delete this task?");
