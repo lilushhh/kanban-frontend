@@ -1,0 +1,53 @@
+let projectId: string | null = null;
+const urlParams = new URLSearchParams(window.location.search);
+const idParam = urlParams.get("id");
+if (!idParam) {
+    console.error("Missing project ID");
+}
+
+projectId = idParam;
+
+async function loadTasks() :Promise<void>{
+    const res = await fetch("http://localhost:8000/tasks");
+    if(!res.ok){
+        console.error("Failed to fetch tasks");
+        return;
+    }
+    const allTasks = await res.json();
+    const tasks = allTasks.filter((task:any) => task.project_id === projectId);
+
+    document.querySelectorAll(".tasks").forEach(zone => {
+        zone.innerHTML = "";
+    });
+    tasks.forEach((task: any) => {
+        renderTask(task.id, task.text, task.status, task.owners);
+    });
+    updateTaskCounts();
+}
+async function renderParticipants() : Promise<void>{
+    const res = await fetch(`http://localhost:8000/projects/${projectId}`);
+    if(!res.ok){
+        console.error("Project not found");
+        return;
+    }
+    const currentProject = await res.json();
+    const participantsLine = document.getElementById("participantsLine");
+    if(!participantsLine) return;
+
+    participantsLine.innerHTML = "";
+
+    currentProject.users.forEach((user: string) => {
+        const span = document.createElement("span");
+        span.textContent = user;
+        span.className = "participant-tag";
+        participantsLine.appendChild(span);
+    })
+}
+
+function renderTask(id: any, text: any, status: any, owners: any) {
+    throw new Error("Function not implemented.");
+}
+function updateTaskCounts() {
+    throw new Error("Function not implemented.");
+}
+
