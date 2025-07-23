@@ -158,7 +158,7 @@ button:hover {
     display: flex;
     justify-content: space-between;
     gap: 20px;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 .column {
